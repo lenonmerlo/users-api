@@ -4,6 +4,7 @@ import com.lenon.users.dto.UserDTO;
 import com.lenon.users.dto.UserRequest;
 import com.lenon.users.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,5 +46,12 @@ public class UserController {
     @PutMapping("/{id}")
     public UserDTO update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
         return service.update(id, request);
+    }
+
+    // DELETE /users/{id}
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
     }
 }

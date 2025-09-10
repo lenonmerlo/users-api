@@ -66,6 +66,14 @@ public class InMemoryUserService implements UserService {
         return updated;
     }
 
+    @Override
+    public void delete(Long id) {
+        UserDTO removed = db.remove(id);
+        if (removed == null) {
+            throw new NotFoundException("User " +id + " not found");
+        }
+    }
+
     // ---------- validações ----------
     private void validateBusiness(String name, String email, String role) {
         if (name == null || name.isBlank())

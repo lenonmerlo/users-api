@@ -10,4 +10,6 @@ public interface UserService {
     UserDTO create(UserRequest request);
     UserDTO findById(Long id);
     UserDTO update(Long id, UserRequest request);
+
+    void delete(Long id);
 }
