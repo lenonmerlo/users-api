@@ -25,6 +25,12 @@ public class UserController {
         return service.findAll();
     }
 
+    // GET /users/{id} -> 200 ou 404
+    @GetMapping("/{id}")
+    public UserDTO getById(@PathVariable Long id) {
+        return service.findById(id);
+    }
+
     // POST /users -> 201 Created + Location
     @PostMapping
     public ResponseEntity<UserDTO> create(@Valid @RequestBody UserRequest request) {

@@ -1,3 +1,3 @@
 package com.lenon.users.dto;
 
-public class UserDTO (Long id, String name, String email, String role) {}
+public record UserDTO (Long id, String name, String email, String role) {}

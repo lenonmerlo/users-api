@@ -4,6 +4,7 @@ import com.lenon.users.dto.UserDTO;
 import com.lenon.users.dto.UserRequest;
 import com.lenon.users.exception.ConflictException;
 import com.lenon.users.exception.DomainValidationException;
+import com.lenon.users.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-public class InMemoryUserService implements UserService {
+public abstract class InMemoryUserService implements UserService {
 
     private final Map<Long, UserDTO> db = new ConcurrentHashMap<>();
     private final AtomicLong seq = new AtomicLong(1);
@@ -39,5 +40,12 @@ public class InMemoryUserService implements UserService {
         UserDTO saved = new UserDTO(id, request.name(), request.email(), request.role().toUpperCase());
         db.put(id, saved);
         return saved;
+    }
+
+    @Override
+    public UserDTO findById(Long id) {
+        UserDTO u = db.get(id);
+        if (u == null) throw new NotFoundException("User " + id + "not found");
+        return u;
     }
 }
