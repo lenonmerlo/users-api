@@ -1,6 +1,7 @@
 package com.lenon.users.service;
 
 import com.lenon.users.dto.UserDTO;
+import com.lenon.users.dto.UserPatchRequest;
 import com.lenon.users.dto.UserRequest;
 import com.lenon.users.exception.ConflictException;
 import com.lenon.users.exception.DomainValidationException;
@@ -62,6 +63,23 @@ public class InMemoryUserService implements UserService {
         ensureEmailUnique(c.email, id);
 
         UserDTO updated = new UserDTO(id, c.name, c.email, c.role);
+        db.put(id, updated);
+        return updated;
+    }
+
+    @Override
+    public UserDTO patch(Long id, UserPatchRequest request) {
+        UserDTO existing = db.get(id);
+        if (existing == null) throw new NotFoundException("User " + id + " not found");
+
+        String name = request.name() != null ? request.name().trim() : existing.name();
+        String email = request.email() != null ? request.email().trim() : existing.email();
+        String role = request.role() != null ? request.role().trim().toUpperCase() : existing.role();
+
+        validateBusiness(name, email, role);
+        ensureEmailUnique(email, id);
+
+        UserDTO updated = new UserDTO(id, name, email, role);
         db.put(id, updated);
         return updated;
     }

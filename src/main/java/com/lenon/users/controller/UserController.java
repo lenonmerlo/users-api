@@ -1,6 +1,7 @@
 package com.lenon.users.controller;
 
 import com.lenon.users.dto.UserDTO;
+import com.lenon.users.dto.UserPatchRequest;
 import com.lenon.users.dto.UserRequest;
 import com.lenon.users.service.UserService;
 import jakarta.validation.Valid;
@@ -46,6 +47,12 @@ public class UserController {
     @PutMapping("/{id}")
     public UserDTO update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
         return service.update(id, request);
+    }
+
+    // PATCH /users/{id}
+    @PatchMapping("/{id}")
+    public UserDTO patch(@PathVariable Long id, @RequestBody UserPatchRequest request) {
+        return service.patch(id, request);
     }
 
     // DELETE /users/{id}

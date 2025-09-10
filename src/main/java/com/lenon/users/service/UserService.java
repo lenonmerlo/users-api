@@ -1,6 +1,7 @@
 package com.lenon.users.service;
 
 import com.lenon.users.dto.UserDTO;
+import com.lenon.users.dto.UserPatchRequest;
 import com.lenon.users.dto.UserRequest;
 
 import java.util.List;
@@ -10,6 +11,7 @@ public interface UserService {
     UserDTO create(UserRequest request);
     UserDTO findById(Long id);
     UserDTO update(Long id, UserRequest request);
+    UserDTO patch(Long id, UserPatchRequest request);
 
     void delete(Long id);
 }
