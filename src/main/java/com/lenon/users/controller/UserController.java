@@ -6,6 +6,7 @@ import com.lenon.users.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.net.URI;
 import java.util.List;
@@ -37,5 +38,11 @@ public class UserController {
         UserDTO saved = service.create(request);
         URI location = URI.create("/users/" + saved.id());
         return ResponseEntity.created(location).body(saved);
+    }
+
+    // PUT /users/{id} -> 200 OK
+    @PutMapping("/{id}")
+    public UserDTO update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
+        return service.update(id, request);
     }
 }
