@@ -5,7 +5,6 @@ import com.lenon.users.dto.UserRequest;
 import com.lenon.users.exception.ConflictException;
 import com.lenon.users.exception.DomainValidationException;
 import com.lenon.users.exception.NotFoundException;
-import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -13,13 +12,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-public  class InMemoryUserService implements UserService {
+public class InMemoryUserService implements UserService {
 
     private final Map<Long, UserDTO> db = new ConcurrentHashMap<>();
     private final AtomicLong seq = new AtomicLong(1);
 
-    private static final Set<String> ALLOWED_ROLES =
-            Set.of("ADMIN", "USER", "MANAGER");
+    private static final Set<String> ALLOWED_ROLES = Set.of("ADMIN", "USER", "MANAGER");
+
+    // helper para limpar entradas
+    private record Clean(String name, String email, String role) {}
+    private Clean sanitize(UserRequest r) {
+        String name  = r.name()  == null ? null : r.name().trim();
+        String email = r.email() == null ? null : r.email().trim();
+        String role  = r.role()  == null ? null : r.role().trim().toUpperCase();
+        return new Clean(name, email, role);
+    }
 
     @Override
     public List<UserDTO> findAll() {
@@ -28,17 +35,12 @@ public  class InMemoryUserService implements UserService {
 
     @Override
     public UserDTO create(UserRequest request) {
-        // Regra de negócio: role permitida
-        if (!ALLOWED_ROLES.contains(request.role().toUpperCase())) {
-            throw new DomainValidationException("Role must be one of: " + ALLOWED_ROLES);
-        }
-        // Conflito: e-mail único (case-insensitive)
-        boolean exists = db.values().stream()
-                .anyMatch(u -> u.email().equalsIgnoreCase(request.email()));
-        if (exists) throw new ConflictException("Email already in use");
+        Clean c = sanitize(request);
+        validateBusiness(c.name, c.email, c.role);
+        ensureEmailUnique(c.email, null);
 
         long id = seq.getAndIncrement();
-        UserDTO saved = new UserDTO(id, request.name(), request.email(), request.role().toUpperCase());
+        UserDTO saved = new UserDTO(id, c.name, c.email, c.role);
         db.put(id, saved);
         return saved;
     }
@@ -53,22 +55,26 @@ public  class InMemoryUserService implements UserService {
     @Override
     public UserDTO update(Long id, UserRequest request) {
         UserDTO existing = db.get(id);
-        if (existing == null) throw new NotFoundException("User " + " not found");
+        if (existing == null) throw new NotFoundException("User " + id + " not found");
 
-        validateBusiness(request);
-        ensureEmailUnique(request.email(), id);
+        Clean c = sanitize(request);
+        validateBusiness(c.name, c.email, c.role);
+        ensureEmailUnique(c.email, id);
 
-        UserDTO updated = new UserDTO(id, request.name(), request.email(), request.role().toUpperCase());
+        UserDTO updated = new UserDTO(id, c.name, c.email, c.role);
         db.put(id, updated);
         return updated;
     }
 
-    private void validateBusiness(UserRequest r) {
-        if (r.name() == null || r.name().isBlank())
+    // ---------- validações ----------
+    private void validateBusiness(String name, String email, String role) {
+        if (name == null || name.isBlank())
             throw new DomainValidationException("Name cannot be blank");
-        if (r.email() == null || !r.email().contains("@"))
+
+        if (email == null || !email.contains("@"))
             throw new DomainValidationException("Invalid email");
-        if (r.role() == null || !r.role().isBlank() || ALLOWED_ROLES.contains(r.role().toUpperCase()))
+
+        if (role == null || role.isBlank() || !ALLOWED_ROLES.contains(role))
             throw new DomainValidationException("Role must be one of: " + ALLOWED_ROLES);
     }
 
@@ -77,6 +83,4 @@ public  class InMemoryUserService implements UserService {
                 .anyMatch(u -> u.email().equalsIgnoreCase(email) && !Objects.equals(u.id(), ignoreId));
         if (exists) throw new ConflictException("Email already in use");
     }
-
-
 }
